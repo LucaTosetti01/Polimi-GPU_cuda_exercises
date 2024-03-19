@@ -7,6 +7,8 @@
 #define OUT_FN_CPU "output.pgm"
 #define BLURDIM 10
 
+/*Returns the current system time in milliseconds (declared as an inline function, so that the
+  GCC compiler is able to make calls to that function faster, see: https://gcc.gnu.org/onlinedocs/gcc/Inline.html)*/
 inline double milliseconds()
 {
     struct timeval tp;
@@ -15,15 +17,10 @@ inline double milliseconds()
     return ((double)tp.tv_sec * 1000 + (double)tp.tv_usec * 0.001);
 }
 
-enum IMAGE_TYPE
-{
-    ppm,
-    pgm
-};
-
 int save_ppm_image(const char *filename, unsigned char *image, unsigned int width, unsigned int height);
 int save_pgm_image(const char *filename, unsigned char *image, unsigned int width, unsigned int height);
-int load_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height, IMAGE_TYPE imgType);
+int load_ppm_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height);
+int load_pgm_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height);
 void rgb2gray(unsigned char *input, unsigned char *output, unsigned int width, unsigned int height);
 void blur(unsigned char *input, unsigned char *output, unsigned int width, unsigned int height);
 
@@ -127,12 +124,11 @@ int main(int argc, char *argv[])
     int blockDimY = atoi(argv[3]);
 
     // load input image
-    err = load_image(inputfile, &input, &width, &height, IMAGE_TYPE::ppm);
+    err = load_ppm_image(inputfile, &input, &width, &height);
 
     if (err)
         return 1;
     nPixels = width * height;
-    printf("prova %d\n",nPixels);
     // allocate memory for gray image
     gray = (unsigned char *)malloc(sizeof(unsigned char) * nPixels);
     if (!gray)
@@ -141,7 +137,7 @@ int main(int argc, char *argv[])
         free(input);
         return 1;
     }
-    printf("prova\n");
+
     // allocate memory for output image
     output = (unsigned char *)malloc(sizeof(unsigned char) * nPixels);
     if (!output)
@@ -151,7 +147,6 @@ int main(int argc, char *argv[])
         free(input);
         return 1;
     }
-    printf("prova2\n");
 
     // process image
     cpu_start = milliseconds();
@@ -170,22 +165,29 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    /*Allocating memory on the Device for the input, intermediate result (gray) and  output arrays*/
     cudaMalloc(&d_input, sizeof(unsigned char) * nPixels * CHANNELS);
     cudaMalloc(&d_gray, sizeof(unsigned char) * nPixels);
     cudaMalloc(&d_output, sizeof(unsigned char) * nPixels);
+    /*Creating gpu_start and gpu_end events in order to use them for recording kernel execution duration*/
     cudaEventCreate(&gpu_start);
     cudaEventCreate(&gpu_end);
 
+    /*Copying the input data from the Host to the Device array*/
     cudaMemcpy(d_input, input, sizeof(unsigned char) * nPixels * CHANNELS, cudaMemcpyHostToDevice);
 
-    dim3 blocksPerGrid(ceil((float)width / blockDimX), ceil((float)height / blockDimY));
-    dim3 threadsPerBlock(blockDimX, blockDimY);
+    /*Declaring the blocks per grid and threads per block strcuts by using the command line parameters read before*/
+    dim3 blocksPerGrid(ceil((float)width / blockDimX), ceil((float)height / blockDimY), 1);
+    dim3 threadsPerBlock(blockDimX, blockDimY, 1);
 
+    /*Getting the Device's properties in order to check that the inserted grid and block dimensions don't exceed the number of
+      threads per block and the number of total threads allowed by the current Device*/
     int dev;
     cudaDeviceProp deviceProp;
     cudaGetDevice(&dev);
     cudaGetDeviceProperties(&deviceProp, dev);
 
+    /*Checks whether the block size command line parameters don't violate some device's dimension properties*/
     if (threadsPerBlock.x <= 0 || threadsPerBlock.x > deviceProp.maxThreadsDim[0] ||
         threadsPerBlock.y <= 0 || threadsPerBlock.y > deviceProp.maxThreadsDim[1])
     {
@@ -210,13 +212,19 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    /*Record gpu_start event in order to "start the timer" with which we will compute the Device's execution time*/
     cudaEventRecord(gpu_start);
     rgb2grayKernel<<<blocksPerGrid, threadsPerBlock>>>(d_input, d_gray, width, height);
     blurKernel<<<blocksPerGrid, threadsPerBlock>>>(d_gray, d_output, width, height);
+    /*Record gpu_end event in order to "end the timer" with which we will compute the Device's execution time*/
     cudaEventRecord(gpu_end);
+    /*Waiting that the kernel execution has ended and that the gpu_end event has been processed by the Device
+      (thing that will happen after the end of the rgb2grayKernel and blurKernel functions)*/
     cudaEventSynchronize(gpu_end);
+    /*Compute execution time of the Device*/
     cudaEventElapsedTime(&gpu_exectime, gpu_start, gpu_end);
 
+    /*Copying the output of the blur process from the Device memory to the Host memory*/
     cudaMemcpy(output, d_output, sizeof(unsigned char) * nPixels, cudaMemcpyDeviceToHost);
 
     // save output image
@@ -230,6 +238,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    /*Print some time comparisons*/
     printf("Host's execution time: %f\n", cpu_exectime);
     printf("Kernel function's execution time: %f\n", gpu_exectime);
     bool ifDeviceFaster = gpu_exectime < cpu_exectime ? 1 : 0;
@@ -280,7 +289,7 @@ int save_pgm_image(const char *filename, unsigned char *image, unsigned int widt
     return 0;
 }
 
-int load_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height, IMAGE_TYPE imgType)
+int load_ppm_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height)
 {
     FILE *f; // input file handle
     char temp[256];
@@ -293,15 +302,43 @@ int load_image(const char *filename, unsigned char **image, unsigned int *width,
         fprintf(stderr, "Error opening '%s' input file\n", filename);
         return -1;
     }
-    
     fscanf(f, "%s\n", temp);
     fscanf(f, "%d %d\n", width, height);
     fscanf(f, "%d\n", &s);
 
-    printf("prova %d", (imgType == IMAGE_TYPE::ppm) ? CHANNELS : 1);
-    *image = (unsigned char *)malloc(sizeof(unsigned char) * (*width) * (*height) * (imgType == IMAGE_TYPE::ppm) ? CHANNELS : 1);
+    *image = (unsigned char *)malloc(sizeof(unsigned char) * (*width) * (*height) * CHANNELS);
     if (*image)
         fread(*image, sizeof(unsigned char), (*width) * (*height) * CHANNELS, f);
+    else
+    {
+        printf("Error with malloc\n");
+        return -1;
+    }
+
+    fclose(f);
+    return 0;
+}
+
+int load_pgm_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height)
+{
+    FILE *f; // input file handle
+    char temp[256];
+    unsigned int s;
+
+    // open the input file and write header info for PPM filetype
+    f = fopen(filename, "rb");
+    if (f == NULL)
+    {
+        fprintf(stderr, "Error opening '%s' input file\n", filename);
+        return -1;
+    }
+    fscanf(f, "%s\n", temp);
+    fscanf(f, "%d %d\n", width, height);
+    fscanf(f, "%d\n", &s);
+
+    *image = (unsigned char *)malloc(sizeof(unsigned char) * (*width) * (*height));
+    if (*image)
+        fread(*image, sizeof(unsigned char), (*width) * (*height), f);
     else
     {
         printf("Error with malloc\n");

@@ -17,10 +17,15 @@ inline double milliseconds()
     return ((double)tp.tv_sec * 1000 + (double)tp.tv_usec * 0.001);
 }
 
-int save_ppm_image(const char *filename, unsigned char *image, unsigned int width, unsigned int height);
-int save_pgm_image(const char *filename, unsigned char *image, unsigned int width, unsigned int height);
-int load_ppm_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height);
-int load_pgm_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height);
+/*ENUM representing the different image types usable (added for steamline and reuse the code)*/
+enum class IMAGE_TYPE
+{
+    ppm,
+    pgm
+};
+
+int save_image(const char *filename, unsigned char *image, unsigned int width, unsigned int height, IMAGE_TYPE img_type);
+int load_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height, IMAGE_TYPE img_type);
 void rgb2gray(unsigned char *input, unsigned char *output, unsigned int width, unsigned int height);
 void blur(unsigned char *input, unsigned char *output, unsigned int width, unsigned int height);
 
@@ -124,7 +129,7 @@ int main(int argc, char *argv[])
     int blockDimY = atoi(argv[3]);
 
     // load input image
-    err = load_ppm_image(inputfile, &input, &width, &height);
+    err = load_image(inputfile, &input, &width, &height, IMAGE_TYPE::ppm);
 
     if (err)
         return 1;
@@ -156,7 +161,7 @@ int main(int argc, char *argv[])
     cpu_exectime = cpu_end - cpu_start;
 
     // save output image
-    err = save_pgm_image(OUT_FN_CPU, output, width, height);
+    err = save_image(OUT_FN_CPU, output, width, height, IMAGE_TYPE::pgm);
     if (err)
     {
         free(input);
@@ -228,7 +233,7 @@ int main(int argc, char *argv[])
     cudaMemcpy(output, d_output, sizeof(unsigned char) * nPixels, cudaMemcpyDeviceToHost);
 
     // save output image
-    err = save_pgm_image(OUT_FN_CPU, output, width, height);
+    err = save_image(OUT_FN_CPU, output, width, height, IMAGE_TYPE::pgm);
     if (err)
     {
         free(input);
@@ -253,7 +258,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-int save_ppm_image(const char *filename, unsigned char *image, unsigned int width, unsigned int height)
+int save_image(const char *filename, unsigned char *image, unsigned int width, unsigned int height, IMAGE_TYPE img_type)
 {
     FILE *f; // output file handle
 
@@ -264,32 +269,18 @@ int save_ppm_image(const char *filename, unsigned char *image, unsigned int widt
         fprintf(stderr, "Error opening 'output.ppm' output file\n");
         return -1;
     }
-    fprintf(f, "P6\n");
+    if (img_type == IMAGE_TYPE::ppm)
+        fprintf(f, "P6\n");
+    else
+        fprintf(f, "P5\n");
+
     fprintf(f, "%d %d\n%d\n", width, height, 255);
-    fwrite(image, sizeof(unsigned char), height * width * CHANNELS, f);
+    fwrite(image, sizeof(unsigned char), height * width * ((img_type == IMAGE_TYPE::ppm) ? CHANNELS : 1), f);
     fclose(f);
     return 0;
 }
 
-int save_pgm_image(const char *filename, unsigned char *image, unsigned int width, unsigned int height)
-{
-    FILE *f; // output file handle
-
-    // open the output file and write header info for PPM filetype
-    f = fopen(filename, "wb");
-    if (f == NULL)
-    {
-        fprintf(stderr, "Error opening 'output.ppm' output file\n");
-        return -1;
-    }
-    fprintf(f, "P5\n");
-    fprintf(f, "%d %d\n%d\n", width, height, 255);
-    fwrite(image, sizeof(unsigned char), height * width, f);
-    fclose(f);
-    return 0;
-}
-
-int load_ppm_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height)
+int load_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height, IMAGE_TYPE img_type)
 {
     FILE *f; // input file handle
     char temp[256];
@@ -306,39 +297,9 @@ int load_ppm_image(const char *filename, unsigned char **image, unsigned int *wi
     fscanf(f, "%d %d\n", width, height);
     fscanf(f, "%d\n", &s);
 
-    *image = (unsigned char *)malloc(sizeof(unsigned char) * (*width) * (*height) * CHANNELS);
+    *image = (unsigned char *)malloc(sizeof(unsigned char) * (*width) * (*height) * ((img_type == IMAGE_TYPE::ppm) ? CHANNELS : 1));
     if (*image)
         fread(*image, sizeof(unsigned char), (*width) * (*height) * CHANNELS, f);
-    else
-    {
-        printf("Error with malloc\n");
-        return -1;
-    }
-
-    fclose(f);
-    return 0;
-}
-
-int load_pgm_image(const char *filename, unsigned char **image, unsigned int *width, unsigned int *height)
-{
-    FILE *f; // input file handle
-    char temp[256];
-    unsigned int s;
-
-    // open the input file and write header info for PPM filetype
-    f = fopen(filename, "rb");
-    if (f == NULL)
-    {
-        fprintf(stderr, "Error opening '%s' input file\n", filename);
-        return -1;
-    }
-    fscanf(f, "%s\n", temp);
-    fscanf(f, "%d %d\n", width, height);
-    fscanf(f, "%d\n", &s);
-
-    *image = (unsigned char *)malloc(sizeof(unsigned char) * (*width) * (*height));
-    if (*image)
-        fread(*image, sizeof(unsigned char), (*width) * (*height), f);
     else
     {
         printf("Error with malloc\n");

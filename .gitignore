@@ -9,8 +9,16 @@
 
 ### Above combination will ignore all files without extension ###
 
+# Unignore Makefiles
+!Makefile
+
 # Prerequisites
 *.d
+
+# Report files
+*.nsys-rep
+*.sqlite
+*.ncu-rep 
 
 # Object files
 *.o

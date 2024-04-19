@@ -1,2 +1,0 @@
-C:/Users/lucat/Desktop/GPU_cuda_exercises/build/CMakeFiles/edit_cache.dir
-C:/Users/lucat/Desktop/GPU_cuda_exercises/build/CMakeFiles/rebuild_cache.dir

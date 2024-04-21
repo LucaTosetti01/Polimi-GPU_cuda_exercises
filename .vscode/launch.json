@@ -9,7 +9,7 @@
             "type": "cuda-gdb",
             "request": "launch",
             "preLaunchTask": "CUDA Make",
-            "program": "${workspaceFolder}/solution/saxpy"
+            "program": "${fileDirname}/${fileBasenameNoExtension}.o"
         },
         {
             "name": "CUDA C++: Attach",

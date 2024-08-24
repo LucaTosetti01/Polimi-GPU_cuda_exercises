@@ -6,8 +6,7 @@
 #define CHECK(call)                                                                 \
   {                                                                                 \
     const cudaError_t err = call;                                                   \
-    if (err != cudaSuccess)                                                         \
-    {                                                                               \
+    if (err != cudaSuccess) {                                                       \
       printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__); \
       exit(EXIT_FAILURE);                                                           \
     }                                                                               \
@@ -16,23 +15,22 @@
 #define CHECK_KERNELCALL()                                                          \
   {                                                                                 \
     const cudaError_t err = cudaGetLastError();                                     \
-    if (err != cudaSuccess)                                                         \
-    {                                                                               \
+    if (err != cudaSuccess) {                                                       \
       printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__); \
       exit(EXIT_FAILURE);                                                           \
     }                                                                               \
   }
 
-#define BLOCK_DIM 8
-#define IN_TILE_DIM BLOCK_DIM
+#define BLOCK_DIM    8
+#define IN_TILE_DIM  BLOCK_DIM
 #define OUT_TILE_DIM (IN_TILE_DIM - 2)
 
 #define Z_SLICING 32
 
-#define DIM (512 + 256)
+#define DIM  (512+256)
 #define SIZE (DIM * DIM * DIM)
 
-#define get(data, i, j, k, N) data[(i) * N * N + (j) * N + (k)]
+#define get(data, i, j, k, N) data[(i) *N * N + (j) *N + (k)]
 
 #define c0 1
 #define c1 1
@@ -44,52 +42,47 @@
 
 // Kernel function for GPU
 __global__ void
-stencil_kernel_coarsening_tiling_gpu(const float *__restrict__ in, float *__restrict__ out, const int N)
-{
+    stencil_kernel_coarsening_tiling_gpu(const float *__restrict__ in, float *__restrict__ out, const int N) {
   const unsigned int i_start = blockIdx.z * Z_SLICING;
-  const unsigned int j = blockIdx.y * OUT_TILE_DIM + threadIdx.y - 1;
-  const unsigned int k = blockIdx.x * OUT_TILE_DIM + threadIdx.x - 1;
+  const unsigned int j       = blockIdx.y * OUT_TILE_DIM + threadIdx.y - 1;
+  const unsigned int k       = blockIdx.x * OUT_TILE_DIM + threadIdx.x - 1;
 
   __shared__ float in_prev_s[IN_TILE_DIM][IN_TILE_DIM];
   __shared__ float in_curr_s[IN_TILE_DIM][IN_TILE_DIM];
   __shared__ float in_next_s[IN_TILE_DIM][IN_TILE_DIM];
   // Check greater than 0 not needed since index is an unsigned int
-  // TODO load shared memory
-  if (i_start - 1 < N && j < N && k < N)
-  {
+  if (i_start - 1 < N && j < N && k < N) {
     in_prev_s[threadIdx.y][threadIdx.x] = get(in, i_start - 1, j, k, N);
   }
-  if (i_start < N && j < N && k < N)
-  {
+  if (i_start < N && j < N && k < N) {
     in_curr_s[threadIdx.y][threadIdx.x] = get(in, i_start, j, k, N);
   }
-  for (unsigned int i = i_start; i < i_start + Z_SLICING; ++i)
-  {
+  for (unsigned int i = i_start; i < i_start + Z_SLICING; ++i) {
     // Check greater than 0 not needed since index is an unsigned int
-    // TODO load shared memory
-    if (i+1 < N && j < N && k < N)
-    {
-      in_curr_s[threadIdx.y][threadIdx.x] = get(in, i_start, j, k, N);
+    if (i + 1 < N && j < N && k < N) {
+      in_next_s[threadIdx.y][threadIdx.x] = get(in, i + 1, j, k, N);
     }
     __syncthreads();
 
-    if (j >= 1 && j < N - 1 && k >= 1 && k < N - 1)
-    {
-      get(out, i, j, k, N) = c0 * in_curr_s[threadIdx.y][threadIdx.x] + c1 * in_curr_s[threadIdx.y][threadIdx.x - 1] +
-                             c2 * in_curr_s[threadIdx.y][threadIdx.x + 1] + c3 * in_curr_s[threadIdx.y - 1][threadIdx.x] +
-                             c4 * in_curr_s[threadIdx.y + 1][threadIdx.x] + c5 * in_prev_s[threadIdx.y][threadIdx.x] +
-                             c6 * in_next_s[threadIdx.y][threadIdx.x];
+    if (i >= 1 && i < N - 1 && j >= 1 && j < N - 1 && k >= 1 && k < N - 1) {
+      if (threadIdx.y >= 1 && threadIdx.y < IN_TILE_DIM - 1 && threadIdx.x >= 1 &&
+          threadIdx.x < IN_TILE_DIM - 1) {
+        get(out, i, j, k, N) =
+            c0 * in_curr_s[threadIdx.y][threadIdx.x] + c1 * in_curr_s[threadIdx.y][threadIdx.x - 1] +
+            c2 * in_curr_s[threadIdx.y][threadIdx.x + 1] + c3 * in_curr_s[threadIdx.y - 1][threadIdx.x] +
+            c4 * in_curr_s[threadIdx.y + 1][threadIdx.x] + c5 * in_prev_s[threadIdx.y][threadIdx.x] +
+            +c6 * in_next_s[threadIdx.y][threadIdx.x];
+      }
     }
-    // TODO perform stencil computation
     __syncthreads();
 
-    // TODO switch shared memory
+    in_prev_s[threadIdx.y][threadIdx.x] = in_curr_s[threadIdx.y][threadIdx.x];
+    in_curr_s[threadIdx.y][threadIdx.x] = in_next_s[threadIdx.y][threadIdx.x];
   }
 }
 
 // Function for CPU stencil computation
-void stencil_cpu(const float *in, float *out, const int N)
-{
+void stencil_cpu(const float *in, float *out, const int N) {
   for (int i = 1; i < N - 1; ++i)
     for (int j = 1; j < N - 1; ++j)
       for (int k = 1; k < N - 1; ++k)
@@ -99,16 +92,12 @@ void stencil_cpu(const float *in, float *out, const int N)
                                c6 * get(in, i + 1, j, k, N);
 }
 
-int main()
-{
-  static_assert(DIM / Z_SLICING, "The dimension should be divisible by the Z slicing");
-  static_assert(DIM / OUT_TILE_DIM, "The dimension should be divisible by the number of output block computer by each block");
+int main() {
+  static_assert(DIM/Z_SLICING, "The dimension should be divisible by the Z slicing");
+  static_assert(DIM/OUT_TILE_DIM, "The dimension should be divisible by the number of output block computer by each block");
   // Generate random input data
   std::vector<float> input_data(SIZE);
-  for (int i = 0; i < SIZE; ++i)
-  {
-    input_data[i] = rand() % 10;
-  }
+  for (int i = 0; i < SIZE; ++i) { input_data[i] = rand() % 10; }
 
   // Compute stencil on CPU
   std::vector<float> cpu_result(SIZE);
@@ -140,8 +129,7 @@ int main()
 
   // Compare CPU and GPU results
   for (int i = 0; i < SIZE; ++i)
-    if (cpu_result[i] != gpu_result[i])
-    {
+    if (cpu_result[i] != gpu_result[i]) {
       std::cout << "Stencil CPU and GPU are NOT equivalent!" << std::endl;
       std::cout << "Index: " << i << std::endl;
       std::cout << "CPU: " << cpu_result[i] << std::endl;

@@ -51,24 +51,30 @@ __global__ void
   __shared__ float in_curr_s[IN_TILE_DIM][IN_TILE_DIM];
   float in_next;
   // Check greater than not needed since index is an unsigned int
-  // TODO load shared memory
-  if (i_start - 1 < N && j < N && k < N)
-  {
+  if (i_start - 1 < N && j < N && k < N) {
     in_prev = get(in, i_start - 1, j, k, N);
   }
-  if (i_start < N && j < N && k < N)
-  {
+  if (i_start < N && j < N && k < N) {
     in_curr_s[threadIdx.y][threadIdx.x] = get(in, i_start, j, k, N);
   }
   for (unsigned int i = i_start; i < i_start + Z_SLICING; ++i) {
     // Check greater than not needed since index is an unsigned int
-    // TODO load shared memory
+    if (i + 1 < N && j < N && k < N) {
+      in_next = get(in, i + 1, j, k, N);
+    }
     __syncthreads();
-
-    // TODO perform stencil computation
+    if (i >= 1 && i < N - 1 && j >= 1 && j < N - 1 && k >= 1 && k < N - 1) {
+      if (threadIdx.y >= 1 && threadIdx.y < IN_TILE_DIM - 1 && threadIdx.x >= 1 &&
+          threadIdx.x < IN_TILE_DIM - 1) {
+        get(out, i, j, k, N) =
+            c0 * in_curr_s[threadIdx.y][threadIdx.x] + c1 * in_curr_s[threadIdx.y][threadIdx.x - 1] +
+            c2 * in_curr_s[threadIdx.y][threadIdx.x + 1] + c3 * in_curr_s[threadIdx.y - 1][threadIdx.x] +
+            c4 * in_curr_s[threadIdx.y + 1][threadIdx.x] + c5 * in_prev + c6 * in_next;
+      }
+    }
     __syncthreads();
-
-    // TODO switch shared memory
+    in_prev                             = in_curr_s[threadIdx.y][threadIdx.x];
+    in_curr_s[threadIdx.y][threadIdx.x] = in_next;
   }
 }
 

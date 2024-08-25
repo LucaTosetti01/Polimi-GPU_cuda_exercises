@@ -9,7 +9,8 @@
             "type": "cuda-gdb",
             "request": "launch",
             "preLaunchTask": "CUDA Make",
-            "program": "${fileDirname}/${fileBasenameNoExtension}.o"
+            "program": "${fileDirname}/${fileBasenameNoExtension}.o",
+            "args": [256]
         },
         {
             "name": "CUDA C++: Attach",

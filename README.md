@@ -1,10 +1,17 @@
 # GPU CUDA Exercises
 
-Lab exercises for the "GPU & Heterogeneous systems" course 2023/2024 @ Polimi. \
+Lab exercises and exams for the "GPU & Heterogeneous systems" course 2023/2024 @ Polimi. \
 Prof: Antonio Miele Rosario.
 
-This repository contains several CUDA exercise proposed by the professor during the course, you can check them by browsing the branches.
-At the moment there are 3 branches: 
+This repository contains several CUDA exercise proposed by the professor during the course and several exams with my personal solutions, you can check them by browsing the branches.
+Branch summary:
+
+|Name|Description|Difficulty (Personally)|Main acceleration strategy(ies)||
+|----|-----------|-----------------------|--------------------------|-|
+|MAIN|Branch template for the creation of other branches|N.A.|N.A.|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/main)|
+|VSUM|Accelerate the computation of the sum of 2 vectors, checking eventual error raised by CUDA commands and compare CPU and GPU time results|Very easy|Standard cuda parallelization with 1D grid|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/vsum)|
+|BLUR|Accelerate the blurring of a ppm image|Easy|Standard cuda parallelization with 2D grid|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/blur)|
+|CONVOLUTION|Accelerate the convolution process between a matrix and a filter through several accelerating patterns|Medium/Hard|Constant memory / Tiling (Shared memory)|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/convolution)|
 
 ---
 ![Static Badge](https://img.shields.io/badge/1-%7F%20%20%20%20%7F%20%20%20%20%7FVSUM%7F%20%20%20%7F%20%20%20%20%7F-rgb(39%2C%20210%2C%20255)) &ensp;&ensp; Accelerate the computation of the sum of 2 vectors, check for eventual raised error by CUDA commands, compare the time \

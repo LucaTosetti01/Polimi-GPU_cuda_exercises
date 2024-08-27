@@ -9,6 +9,22 @@ Complete  the  following  OpenACC  pragmas  to  optimize  data  transfer  betwee
 particular, 1) specify between brackets () the appropriate list of arrays (index range for each array is always 
 [0:N]), and 2) delete unnecessary clauses. Motivate your answer. 
 
+```
+void foo(int *A, int *B, int *D){ 
+  int C[N]; 
+#pragma acc data copy() copyin() copyout() create()   
+{ 
+  #pragma acc parallel loop copy() copyin() copyout() create() 
+  for(int i = 0; i < N; i++) 
+    C[i] = A[i] + B[i]; 
+  #pragma acc parallel loop copy() copyin() copyout() create()
+  for(int i = 0; i < N; i++) 
+    D[i] = C[i] + A[i]; 
+} 
+} 
+```
+
+## Response
 <pre>
 void foo(int *A, int *B, int *D){ 
   int C[N]; 
@@ -24,7 +40,6 @@ void foo(int *A, int *B, int *D){
 } 
 </pre>
 
-## Response
 We can use the first copyin in order to move array A from host mem. to device mem. and use it for the 2 inner for loops.
 We can use the first create() since array C is only used device side, therefore we need only to allocate space on the device memory, and it's used by both inner for loops.
 We can use the second copyin() in order to move B form host memory to device memory since only the first for loop use it.

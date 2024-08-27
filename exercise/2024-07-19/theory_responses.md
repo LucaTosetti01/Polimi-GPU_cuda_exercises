@@ -31,12 +31,12 @@ void foo(int *A, int *B){
 
 ## Response
 <pre>
-#pragma acc data copy(A[0:N]) <span style="text-decoration: line-through;">copyin() copyout()</span>  create(C[0:N])  
+#pragma acc data copy(A[0:N]) <s>copyin()</s> <s>copyout()</s> create(C[0:N])  
 { 
-  #pragma acc parallel loop <span style="text-decoration: line-through;">copy()</span> copyin(B[0:N]) <span style="text-decoration: line-through;">copyout(    ) create(    )</span>
+  #pragma acc parallel loop <s>copy()</s> copyin(B[0:N]) <s>copyout()</s> <s>create()</s>
   for(int i = 0; i < N; i++) 
     C[i] = A[i] + B[i]; 
-  #pragma acc parallel loop <span style="text-decoration: line-through;">copy(    ) copyin(    ) copyout(    ) create(    ) </span>
+  #pragma acc parallel loop <s>copy()</s> <s>copyin()</s> <s>copyout()</s> <s>create()</s>
   for(int i = 0; i < N; i++) 
     A[i] = C[i] * A[i]; 
 } 

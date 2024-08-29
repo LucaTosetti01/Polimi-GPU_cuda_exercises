@@ -42,9 +42,6 @@ __global__ void initialize(float *surf,
   if (tx < dimCol && ty < dimRow)
   {
     int index = getIndex(tx, ty, dimRow);
-    if(index==9) {
-      printf("");
-    }
     float ds2 = (tx - dimCol / 2) * (tx - dimCol / 2) + (ty - dimRow / 2) * (ty - dimRow / 2);
     if (ds2 < radius2)
       surf[index] = 65.0f;
@@ -90,29 +87,29 @@ __global__ void simulateStep(
 }
 
 __global__ void initialize_coarsening(float *surf,
-                                     const unsigned int dimRow,
-                                     const unsigned int dimCol,
-                                     const float radius2)
+                                      const unsigned int dimRow,
+                                      const unsigned int dimCol,
+                                      const float radius2)
 {
   const unsigned int tx = blockDim.x * blockIdx.x + threadIdx.x;
   const unsigned int ty = blockDim.y * blockIdx.y + threadIdx.y;
 
-  int stride = blockDim.x * gridDim.x;
+  int stride = blockDim.x * gridDim.x * COARSENING_FACTOR;
   if (ty < dimRow)
   {
     for (int i = tx; i < dimCol; i += stride)
     {
       int index = getIndex(i, ty, dimRow);
       float ds2 = (i - dimCol / 2) * (i - dimCol / 2) + (ty - dimRow / 2) * (ty - dimRow / 2);
-        if (ds2 < radius2)
-          surf[index] = 65.0f;
-        else
-          surf[index] = 5.0f;
+      if (ds2 < radius2)
+        surf[index] = 65.0f;
+      else
+        surf[index] = 5.0f;
     }
   }
 }
 
-// In the main fucntion we must adapt the number of threads spawned by the kernel function
+// In the main function we must adapt the number of threads spawned by the kernel function
 // In fact in the non coarsened solution we could spawn 32x32 blocks and adapt the number of
 // blocks to the number of data to process, with this new kernel we have also to keep in regard
 // the COARSENING_FACTOR, therefore the main will contain:
@@ -124,16 +121,16 @@ int main(int argc, char **argv)
   float *surf, *surf1, *tmp;
   int nx, ny, nsteps, n;
 
-  //Read arguments
-  // if (argc != 4 || atoi(argv[3]) % 2 != 0)
-  // {
-  //  printf("Please specify sizes of the 2D surface and the number of time steps\n");
-  //  printf("The number of time steps must be even\n");
-  //  return 0;
-  // }
-  // nx = atoi(argv[1]);
-  // ny = atoi(argv[2]);
-  // nsteps = atoi(argv[3]);
+  // Read arguments
+  //  if (argc != 4 || atoi(argv[3]) % 2 != 0)
+  //  {
+  //   printf("Please specify sizes of the 2D surface and the number of time steps\n");
+  //   printf("The number of time steps must be even\n");
+  //   return 0;
+  //  }
+  //  nx = atoi(argv[1]);
+  //  ny = atoi(argv[2]);
+  //  nsteps = atoi(argv[3]);
   nx = 8;
   ny = 10;
   nsteps = 6;
@@ -159,7 +156,7 @@ int main(int argc, char **argv)
   float radius2 = (nx / 6.0f) * (nx / 6.0f);
 
   dim3 threadsPerBlock(BLOCK_DIM, BLOCK_DIM);
-  dim3 blocksPerGrid((nx - 1) / threadsPerBlock.x + 1, (ny - 1) / threadsPerBlock.y + 1);
+  dim3 blocksPerGrid((nx - 1) / (threadsPerBlock.x * COARSENING_FACTOR) + 1, (ny - 1) / threadsPerBlock.y + 1);
   initialize_coarsening<<<blocksPerGrid, threadsPerBlock>>>(d_surf, ny, nx, radius2);
   cudaDeviceSynchronize();
 

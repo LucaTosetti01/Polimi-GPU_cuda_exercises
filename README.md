@@ -16,7 +16,7 @@ Branch summary:
 |EXAMS|Past course's exams with my and professor's solutions|Medium|Potentially all (but mainly Shared memory and Coarsening)|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/exams)|
 |GRAPH TRAVERSAL|Accelerate the traversal of a graph through a BFS approach|Hard|Shared memory / Texture memory / Adapt kernel callings based on problem size|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/graph_traversal)|
 |HISTOGRAM|Accelerate the computation of the letters' counting in a text using an histogram as result data structure|Medium|Coarsening / Privatization (With Global memory, Shared memory and registers)|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/histogram)|
-|MERGE|Accelerate the merge of two arrays|Very hard||Shared memory|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/merge)|
+|MERGE|Accelerate the merge of two arrays|Very hard|Shared memory|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/merge)|
 |REDUCTION|Accelerate the reduction on an array of elements|Medium / Hard|Coalesced accesses / Shared memory / Coarsening|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/reduction)|
 |SCAN|Accelerate the "scan" (basically a foldr sums of the elements' array applied at every elements) process of an array of elements|Medium|Shared memory / Memory optimizations|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/scan)|
 |SPARSE MATRICES|Accelerate the computation of systems of equations represented as sparse matrices|Easy / Medium|Data memory layout|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/sparse_matrices)|

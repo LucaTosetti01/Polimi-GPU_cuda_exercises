@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
@@ -9,8 +10,7 @@
 #define CHECK(call)                                                                 \
   {                                                                                 \
     const cudaError_t err = call;                                                   \
-    if (err != cudaSuccess)                                                         \
-    {                                                                               \
+    if (err != cudaSuccess) {                                                       \
       printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__); \
       exit(EXIT_FAILURE);                                                           \
     }                                                                               \
@@ -19,101 +19,102 @@
 #define CHECK_KERNELCALL()                                                          \
   {                                                                                 \
     const cudaError_t err = cudaGetLastError();                                     \
-    if (err != cudaSuccess)                                                         \
-    {                                                                               \
+    if (err != cudaSuccess) {                                                       \
       printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__); \
       exit(EXIT_FAILURE);                                                           \
     }                                                                               \
   }
 
-#define MIN_VALUE 1.0
-#define MAX_VALUE 10.0
-#define NUM_ROW 5
-#define NUM_COLUMN 5
+#define MIN_VALUE    1.0
+#define MAX_VALUE    10.0
+#define NUM_ROW      5
+#define NUM_COLUMN   5
 #define NUM_NON_ZERO 10
 
 #define BLOCK_DIM 128
 
-struct SparseMatrixCSR
-{
-  int *row_indices;
-  int *column_indices;
-  double *values;
+struct SparseMatrixCSR {
+  int* row_indices;
+  int* column_indices;
+  double* values;
   int num_rows;
   int num_columns;
   int rows_indexes_length;
   int num_elements;
 
-  SparseMatrixCSR(const int num_rows, const int num_columns, const int num_non_zeros)
-  {
-    this->num_rows = num_rows;
+  struct matrix_element {
+    int row, column;
+    double value;
+  };
+
+  SparseMatrixCSR(const int num_rows, const int num_columns, const int num_non_zeros) {
+    this->num_rows    = num_rows;
     this->num_columns = num_columns;
 
+    // Initialize randomizers
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> row_dist(0, num_rows - 1);
-    std::uniform_int_distribution<> col_dist(0, num_columns - 1);
     std::uniform_real_distribution<> val_dist(MIN_VALUE, MAX_VALUE);
 
-    int last_row = 0;
-    std::vector<int> row_indices;
-    std::vector<int> column_indices;
-    std::vector<double> values;
+    std::vector<double> values;      // stored non-zero values
+    std::vector<int> column_indices; // stored column indices (same size as values)
+    std::vector<int> row_indices = {
+        0}; // stored row indices (size = num_rows + 1) initialized with one 0 as first element
 
-    row_indices.push_back(0);
-    for (int i = 0; i < num_non_zeros; ++i)
-    {
-      int row = row_dist(gen);
-      int col = col_dist(gen);
-      double val = val_dist(gen);
+    //generate random values
+    for (int i = 0; i < num_non_zeros; ++i) { values.push_back(val_dist(gen)); }
 
-      column_indices.push_back(col);
-      values.push_back(val);
+    //fill column indices with values 0,1,2,...,NUM_COLUMN-1 x NUM_ROW times
+    for (int i = 0; i < NUM_ROW; ++i) {
+      for (int j = 0; j < NUM_COLUMN; ++j) { column_indices.push_back(j); }
+    }
 
-      if (row != last_row)
-      {
-        for (int r = last_row + 1; r <= row; ++r)
-        {
-          row_indices.push_back(i);
-        }
-        last_row = row;
+    //randomly remove some values from column_indices until it is num_non_zeros long
+    while (column_indices.size() > num_non_zeros) {
+      column_indices.erase(column_indices.begin() + (gen() % column_indices.size()));
+    }
+
+    //generate row indices from column indices
+    for (int i = 1; i < num_non_zeros; ++i) {
+      if (column_indices[i] <= column_indices[i - 1]) {
+        row_indices.push_back(i);
       }
     }
-    while (last_row < num_rows)
-    {
-      row_indices.push_back(num_non_zeros);
-      last_row++;
+
+    row_indices.push_back(num_non_zeros);
+
+    //copy one of the values of row_indices next to his position
+    while (row_indices.size() < num_rows + 1) {
+      int idx = gen() % row_indices.size();
+      row_indices.insert(row_indices.begin() + idx, row_indices[idx]);
     }
 
     this->column_indices = new int[column_indices.size()];
-    this->row_indices = new int[row_indices.size()];
-    this->values = new double[values.size()];
+    this->row_indices    = new int[row_indices.size()];
+    this->values         = new double[values.size()];
     std::memcpy(this->column_indices, column_indices.data(), column_indices.size() * sizeof(int));
     std::memcpy(this->row_indices, row_indices.data(), row_indices.size() * sizeof(int));
     std::memcpy(this->values, values.data(), values.size() * sizeof(double));
     this->rows_indexes_length = row_indices.size();
-    this->num_elements = column_indices.size();
+    this->num_elements        = column_indices.size();
   }
 
-  ~SparseMatrixCSR()
-  {
+  ~SparseMatrixCSR() {
     delete this->column_indices;
     delete this->row_indices;
     delete this->values;
   }
 };
 
-struct SparseMatrixCSR_gpu
-{
-  int *row_indices;
-  int *column_indices;
-  double *values;
+struct SparseMatrixCSR_gpu {
+  int* row_indices;
+  int* column_indices;
+  double* values;
   int num_rows;
   int num_columns;
 
-  SparseMatrixCSR_gpu(const SparseMatrixCSR &A)
-  {
-    this->num_rows = A.num_rows;
+  SparseMatrixCSR_gpu(const SparseMatrixCSR& A) {
+    this->num_rows    = A.num_rows;
     this->num_columns = A.num_columns;
     // Allocate memory on GPU
     CHECK(cudaMalloc(&this->row_indices, A.rows_indexes_length * sizeof(int)));
@@ -131,60 +132,51 @@ struct SparseMatrixCSR_gpu
     CHECK(cudaMemcpy(this->values, A.values, A.num_elements * sizeof(double), cudaMemcpyHostToDevice));
   };
 
-  ~SparseMatrixCSR_gpu()
-  {
-    if (this->column_indices != nullptr)
-    {
+  ~SparseMatrixCSR_gpu() {
+    if (this->column_indices != nullptr) {
       CHECK(cudaFree(this->column_indices));
       this->column_indices = nullptr;
     }
-    if (this->row_indices != nullptr)
-    {
+    if (this->row_indices != nullptr) {
       CHECK(cudaFree(this->row_indices));
       this->row_indices = nullptr;
     }
-    if (this->values != nullptr)
-    {
+    if (this->values != nullptr) {
       CHECK(cudaFree(this->values));
       this->values = nullptr;
     }
   }
 };
 
-__global__ void SpMV_CSR_gpu(const int *__restrict__ row_indices,
-                             const int *__restrict__ column_indices,
-                             const double *__restrict__ values,
+__global__ void SpMV_CSR_gpu(const int* __restrict__ row_indices,
+                             const int* __restrict__ column_indices,
+                             const double* __restrict__ values,
                              const int num_rows,
                              const int num_columns,
-                             const double *__restrict__ x,
-                             double *__restrict__ y)
-{
+                             const double* __restrict__ x,
+                             double* __restrict__ y) {
   const int row = blockIdx.x * blockDim.x + threadIdx.x;
-  // TODO
-  if (row < num_rows)
-  {
-    for (int k = row_indices[row]; k < row_indices[row + 1]; ++k)
-    {
-      int c_idx = column_indices[k];
-      y[row] += values[k] * x[c_idx];
+  if (row < num_rows) {
+    double dotProduct   = 0;
+    const int row_start = row_indices[row];
+    const int row_end   = row_indices[row + 1];
+    for (int element = row_start; element < row_end; ++element) {
+      dotProduct += values[element] * x[column_indices[element]];
     }
+    y[row] = dotProduct;
   }
 }
 
-void SpMV_CSR(const SparseMatrixCSR *A, const double *x, double *y)
-{
-  for (int i = 0; i < A->num_rows; ++i)
-  {
-    for (int k = A->row_indices[i]; k < A->row_indices[i + 1]; ++k)
-    {
+void SpMV_CSR(const SparseMatrixCSR* A, const double* x, double* y) {
+  for (int i = 0; i < A->num_rows; ++i) {
+    for (int k = A->row_indices[i]; k < A->row_indices[i + 1]; ++k) {
       int j = A->column_indices[k];
       y[i] += A->values[k] * x[j];
     }
   }
 }
 
-int main()
-{
+int main() {
   // Example sparse matrix in CSR format
   SparseMatrixCSR A{NUM_ROW, NUM_COLUMN, NUM_NON_ZERO};
 
@@ -195,17 +187,11 @@ int main()
   std::mt19937 gen(rd());
   std::uniform_real_distribution<double> dist(MIN_VALUE, MAX_VALUE);
 
-  for (int i = 0; i < A.num_columns; ++i)
-  {
-    x[i] = dist(gen);
-  }
+  for (int i = 0; i < A.num_columns; ++i) { x[i] = dist(gen); }
 
   // Result vector
   std::vector<double> cpu_result(A.num_rows);
-  for (int i = 0; i < cpu_result.size(); ++i)
-  {
-    cpu_result[i] = 0.0;
-  }
+  for (int i = 0; i < cpu_result.size(); ++i) { cpu_result[i] = 0.0; }
 
   // Perform sparse matrix-vector multiplication
   SpMV_CSR(&A, x.data(), cpu_result.data());
@@ -239,8 +225,7 @@ int main()
 
   // Compare CPU and GPU results
   for (int i = 0; i < A.num_rows; ++i)
-    if (std::abs(cpu_result[i] - gpu_result[i]) > 1e-3)
-    {
+    if (std::abs(cpu_result[i] - gpu_result[i]) > 1e-3) {
       std::cout << "Sparse Matrix Vector Multiplication CSR CPU and GPU are NOT equivalent!" << std::endl;
       std::cout << "Index: " << i << std::endl;
       std::cout << "CPU: " << cpu_result[i] << std::endl;

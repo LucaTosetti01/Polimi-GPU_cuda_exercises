@@ -127,11 +127,11 @@ __global__ void SpMV_COO_gpu(const int* __restrict__ row_indices,
                              const int num_elements,
                              const float* x,
                              float* y) {
-  // TODO
-  int const tid = blockDim.x * blockIdx.x + threadIdx.x;
-  for(int element = tid; element < num_elements; element+=(gridDim.x*blockDim.x)) {
-    const int row = row_indices[tid];
-    atomicAdd(&y[row], values[element]*x[row]);
+  for (int element = threadIdx.x + blockIdx.x * blockDim.x; element < num_elements;
+       element += blockDim.x * gridDim.x) {
+    const int column = column_indices[element];
+    const int row    = row_indices[element];
+    atomicAdd(&y[row], values[element] * x[column]);
   }
 }
 

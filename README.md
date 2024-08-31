@@ -12,6 +12,17 @@ Branch summary:
 |VSUM|Accelerate the computation of the sum of 2 vectors, checking eventual error raised by CUDA commands and compare CPU and GPU time results|Very easy|Standard cuda parallelization with 1D grid|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/vsum)|
 |BLUR|Accelerate the blurring of a ppm image|Easy|Standard cuda parallelization with 2D grid|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/blur)|
 |CONVOLUTION|Accelerate the convolution process between a matrix and a filter through several accelerating patterns|Medium/Hard|Constant memory / Tiling (Shared memory)|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/convolution)|
+|ELECTROSTATIC MAP|Accelerate the computation of an electrostatic potential map|Hard|Loop reorder optimization / Coarsening|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/electrostatic_map)|
+|EXAMS|Past course's exams with my and professor's solutions|Medium|Potentially all (but mainly Shared memory and Coarsening)|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/exams)|
+|GRAPH TRAVERSAL|Accelerate the traversal of a graph through a BFS approach|Hard|Shared memory / Texture memory / Adapt kernel callings based on problem size|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/graph_traversal)|
+|HISTOGRAM|Accelerate the computation of the letters' counting in a text using an histogram as result data structure|Medium|Coarsening / Privatization (With Global memory, Shared memory and registers)|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/histogram)|
+|MERGE|Accelerate the merge of two arrays|Very hard||Shared memory|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/merge)|
+|REDUCTION|Accelerate the reduction on an array of elements|Medium / Hard|Coalesced accesses / Shared memory / Coarsening|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/reduction)|
+|SCAN|Accelerate the "scan" (basically a foldr sums of the elements' array applied at every elements) process of an array of elements|Medium|Shared memory / Memory optimizations|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/scan)|
+|SPARSE MATRICES|Accelerate the computation of systems of equations represented as sparse matrices|Easy / Medium|Data memory layout|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/sparse_matrices)|
+|STENCIL|Accelerate the "stencil" operation (sum of the products between weight values and contiguous data elements surrounding a central data element)|Hard|Shared memory / Coarsening / Coarsening optimizations|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/stencil)|
+|TOOLS PROFILING TESTS|Various exercises to be used in order to become pratical in using NVIDIA profiling tools (ncu)|N.A|N.A|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/tools_profiling_tests)|
+|VARIOUS TESTS|Scratchpad branch used for testing various piece of codes used by the professor during the lectures|N.A|N.A|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/various_tests)|
 
 ---
 ![Static Badge](https://img.shields.io/badge/1-%7F%20%20%20%20%7F%20%20%20%20%7FVSUM%7F%20%20%20%7F%20%20%20%20%7F-rgb(39%2C%20210%2C%20255)) &ensp;&ensp; Accelerate the computation of the sum of 2 vectors, check for eventual raised error by CUDA commands, compare the time \
@@ -56,15 +67,6 @@ A brief description of the steps that i took in order to make all work properly:
     - `nvcc --version` : to see whether the compiler has been correctly installed or not
     - `ncu --version` : to see whether the profiler has been correctly installed or not
 
-# TROUBLESHOOTING
-
-Some problem that i faced and their solutions:
-- While trying to use cuda-gdb i faced the error: `Error: get_elf_image(0): Failed to read the ELF image handle 93825002783360 relocated 1, error=CUDBG_ERROR_INVALID_ARGS, error message=`. \
-I solved this problem by creating a registry key on Windows as stated [here](https://forums.developer.nvidia.com/t/cuda-gdb-report-internal-error-while-using-under-wsl2/249595).
-- While trying to open nsight-systems' GUI through command line i first faced the error `qt.qpa.plugin: Could not load the Qt platform plugin "wayland" in "" even though it was found.` and i solved it by installing qtwayland5 using `sudo apt install qtwayland5`. \
-However immediately after I faced another problem: After calling `nsys-ui`, as first thing it says that `OpenGL version is too low (0). Falling back to Mesa software rendering.`, even though i had already OpenGL 4.6 installed on Windows and I subsequently installed it with `sudo add-apt-repository ppa:kisak/kisak-mesa` in wsl too but with no results.
-And finally even with that error nsys seems to start but crashes immediately, I don't know if it is related with the OpenGL problem.
-The only workaround that i found has been to install nsys on Windows and open the created reports (the CLI commands of nsys works properly) with it.
 
 
 

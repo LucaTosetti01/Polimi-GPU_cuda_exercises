@@ -1,0 +1,9 @@
+# TROUBLESHOOTING
+
+Some problem that i faced and their solutions:
+- While trying to use cuda-gdb i faced the error: `Error: get_elf_image(0): Failed to read the ELF image handle 93825002783360 relocated 1, error=CUDBG_ERROR_INVALID_ARGS, error message=`. \
+I solved this problem by creating a registry key on Windows as stated [here](https://forums.developer.nvidia.com/t/cuda-gdb-report-internal-error-while-using-under-wsl2/249595).
+- While trying to open nsight-systems' GUI through command line i first faced the error `qt.qpa.plugin: Could not load the Qt platform plugin "wayland" in "" even though it was found.` and i solved it by installing qtwayland5 using `sudo apt install qtwayland5`. \
+However immediately after I faced another problem: After calling `nsys-ui`, as first thing it says that `OpenGL version is too low (0). Falling back to Mesa software rendering.`, even though i had already OpenGL 4.6 installed on Windows and I subsequently installed it with `sudo add-apt-repository ppa:kisak/kisak-mesa` in wsl too but with no results.
+And finally even with that error nsys seems to start but crashes immediately, I don't know if it is related with the OpenGL problem.
+The only workaround that i found has been to install nsys on Windows and open the created reports (the CLI commands of nsys works properly) with it.

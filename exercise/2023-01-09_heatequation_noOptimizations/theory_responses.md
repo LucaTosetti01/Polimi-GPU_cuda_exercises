@@ -70,19 +70,19 @@ int main(){
 ```
 
 ## Response
-It will print:
-"Depth: 0 thread: 0 block: 0"
-"Depth: 0 thread: 1 block: 0"
-"Depth: 0 thread: 2 block: 0"
-"Depth: 0 thread: 3 block: 0"
-"Depth: 1 thread: 0 block: 0"
-"Depth: 1 thread: 1 block: 0"
-"Depth: 1 thread: 2 block: 0"
-"Depth: 1 thread: 3 block: 0"
-"Depth: 2 thread: 0 block: 0"
-"Depth: 2 thread: 1 block: 0"
-"Depth: 2 thread: 2 block: 0"
+It will print: \
+"Depth: 0 thread: 0 block: 0" \
+"Depth: 0 thread: 1 block: 0" \
+"Depth: 0 thread: 2 block: 0" \
+"Depth: 0 thread: 3 block: 0" \
+"Depth: 1 thread: 0 block: 0" \
+"Depth: 1 thread: 1 block: 0" \
+"Depth: 1 thread: 2 block: 0" \
+"Depth: 1 thread: 3 block: 0" \
+"Depth: 2 thread: 0 block: 0" \
+"Depth: 2 thread: 1 block: 0" \
+"Depth: 2 thread: 2 block: 0" \
 "Depth: 2 thread: 3 block: 0"
 
-12 threads in total are created.
+12 threads in total are created. \
 N.B: The printf at the same depth could appear in different order based on the order in which the different threads complete their execution

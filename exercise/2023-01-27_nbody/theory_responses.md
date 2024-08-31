@@ -13,7 +13,7 @@ In the GPU architecture have been parallelized 3 features of the graphic pipelin
     - Fragments generation (Rasterization): The different primitives are converted into fragments that describe to which pixels the primitives will overlap. An initial coloring of the scene is started.
     - Fragment processing: The coloring is completed even taking care of scene characteristics such as the lighting and the objects' interaction.
 
-Question 2 
+# Question 2 
 Draw the Gantt chart of the execution of the various functions in the following three cases. 
  
  ```
@@ -46,6 +46,9 @@ foo<<<blocks, threads, 0, stream2>>>();
 ```
 
 ## Response
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
 
 # Question 3 
 Briefly  describe  CUDA  memory  model;  for  each  component  specify  name,  type  of  usage,  type  of  access 

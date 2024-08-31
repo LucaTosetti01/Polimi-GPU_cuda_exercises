@@ -34,13 +34,13 @@ int main(){
 ```
 
 ## Response
-"Recursion=2: Hi from thread 0 block 0"
-"Recursion=1: Hi from thread 0 block 0"
-"Recursion=1: Hi from thread 1 block 0"
-"Recursion=0: Hi from thread 0 block 0"
-"Recursion=0: Hi from thread 1 block 0"
-"Recursion=0: Hi from thread 2 block 0"
-"Recursion=0: Hi from thread 3 block 0"
+"Recursion=2: Hi from thread 0 block 0" \
+"Recursion=1: Hi from thread 0 block 0" \
+"Recursion=1: Hi from thread 1 block 0" \
+"Recursion=0: Hi from thread 0 block 0" \
+"Recursion=0: Hi from thread 1 block 0" \
+"Recursion=0: Hi from thread 2 block 0" \
+"Recursion=0: Hi from thread 3 block 0" 
 
 Total threads created: 7
 

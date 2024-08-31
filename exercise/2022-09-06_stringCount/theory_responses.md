@@ -38,6 +38,9 @@ foo<<<blocks, threads, 0, stream2>>>();
 ```
 
 ## Response
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
 
 # Question 3 
 Explain why OpenCL mainly adopts the just-in-time (JIT) compilation for the kernels to execute and which is the 

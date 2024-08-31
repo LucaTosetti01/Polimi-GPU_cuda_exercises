@@ -6,8 +6,9 @@ Prof: Antonio Miele Rosario.
 This repository contains several CUDA exercise proposed by the professor during the course and several exams with my personal solutions, you can check them by browsing the branches.
 Branch summary:
 
+
 |Name|Description|Difficulty (Personally)|Main acceleration strategy(ies)||
-|----|-----------|-----------------------|--------------------------|-|
+|:----:|-----------|:-----------------------:|--------------------------|-|
 |MAIN|Branch template for the creation of other branches|N.A.|N.A.|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/main)|
 |VSUM|Accelerate the computation of the sum of 2 vectors, checking eventual error raised by CUDA commands and compare CPU and GPU time results|Very easy|Standard cuda parallelization with 1D grid|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/vsum)|
 |BLUR|Accelerate the blurring of a ppm image|Easy|Standard cuda parallelization with 2D grid|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/blur)|
@@ -23,17 +24,6 @@ Branch summary:
 |STENCIL|Accelerate the "stencil" operation (sum of the products between weight values and contiguous data elements surrounding a central data element)|Hard|Shared memory / Coarsening / Coarsening optimizations|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/stencil)|
 |TOOLS PROFILING TESTS|Various exercises to be used in order to become pratical in using NVIDIA profiling tools (ncu)|N.A|N.A|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/tools_profiling_tests)|
 |VARIOUS TESTS|Scratchpad branch used for testing various piece of codes used by the professor during the lectures|N.A|N.A|[Link](https://github.com/LucaTosetti01/GPU_cuda_exercises/tree/various_tests)|
-
----
-![Static Badge](https://img.shields.io/badge/1-%7F%20%20%20%20%7F%20%20%20%20%7FVSUM%7F%20%20%20%7F%20%20%20%20%7F-rgb(39%2C%20210%2C%20255)) &ensp;&ensp; Accelerate the computation of the sum of 2 vectors, check for eventual raised error by CUDA commands, compare the time \
-&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;execution results between CPU and GPU.
-
----
-![Static Badge](https://img.shields.io/badge/2%20-%7F%20%20%20%20%7F%20%20%20%20%7FBLUR%7F%20%20%20%20%7F%20%20%20%20%7F-%20rgb(39%2C%20210%2C%20255)) &ensp;&ensp; Accelerate the blurring of a ppm image through the GPU.
-
----
-![Static Badge](https://img.shields.io/badge/3%20-VARIOUS_TESTS-%20rgb(39%2C%20210%2C%20255)) &ensp;&ensp; Examples made available by the professor in order to play around with Nvidia Nsight Compute Profiler (ncu)
-
 
 # My dev environment
 

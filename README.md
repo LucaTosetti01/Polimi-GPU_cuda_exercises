@@ -3,8 +3,11 @@
 Lab exercises and exams for the "GPU & Heterogeneous systems" course 2023/2024 @ Polimi. \
 Prof: Antonio Miele Rosario.
 
-This repository contains several CUDA exercise proposed by the professor during the course and several exams with my personal solutions, you can check them by browsing the branches.
-Branch summary:
+This repository contains several CUDA exercise proposed by the professor during the course and several exams with my personal solutions, you can check them by browsing the branches. 
+
+Grade obtained: 28/30
+
+# Branch summary:
 
 
 |Name|Description|Difficulty (Personally)|Main acceleration strategy(ies)||

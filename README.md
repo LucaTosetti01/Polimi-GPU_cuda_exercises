@@ -60,6 +60,9 @@ A brief description of the steps that i took in order to make all work properly:
     - `nvcc --version` : to see whether the compiler has been correctly installed or not
     - `ncu --version` : to see whether the profiler has been correctly installed or not
 
+# Additional notes
+
+When I created this repository, NVIDIA Nsight Systems did not support collecting kernels data in the timeline displayed when using WSL2 distributions, as documented [here](https://forums.developer.nvidia.com/t/nsys-is-not-collecting-kernel-data/244647). I have no clue whether the situation has changed or not
 
 
 
